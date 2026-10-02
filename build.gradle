@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.jbgroup'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+
+    testImplementation("io.rest-assured:rest-assured:6.0.1")
+    implementation("io.rest-assured:json-schema-validator:6.0.1")
+    implementation("org.json:json:20260814")
+
+    //cucumber
+    implementation("io.cucumber:cucumber-java:7.34.8")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.34.8")
+
+}
+
+
+
+test {
+    useJUnitPlatform()
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+tasks.register('cucumber', JavaExec) {
+    dependsOn assemble, testClasses
+    mainClass = "io.cucumber.core.cli.Main"
+    classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+    args = [
+            "--plugin", "pretty",
+            "--plugin", "html:target/cucumber-report.html",
+            "--plugin", "html:target/cucumber-report.json",
+            "--glue", "steps",
+            "src/test/resources",
+            "--tags", project.findProperty("suite") ?: "@SmokeTest"
+    ]
+}
